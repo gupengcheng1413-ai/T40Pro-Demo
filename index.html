@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>T40 Pro 查词翻译 - 分屏设计高保真Demo</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#111;display:flex;flex-direction:column;align-items:center;min-height:100vh;font-family:'Noto Sans SC','PingFang SC','Microsoft YaHei','Helvetica Neue',sans-serif;padding:20px 0}
+.screen{width:1640px;height:348px;background:#000;border-radius:8px;box-shadow:0 4px 40px rgba(0,0,0,.9);overflow:hidden;position:relative;transform-origin:top center;flex-shrink:0}
+@media(max-width:1700px){.screen{transform:scale(.88)}}
+@media(max-width:1460px){.screen{transform:scale(.72)}}
+@media(max-width:1100px){.screen{transform:scale(.55)}}
+.pg{display:none;width:100%;height:100%;position:absolute;top:0;left:0}
+.pg.on{display:flex}
+
+/* NAV */
+.nb{margin-top:12px;display:flex;flex-wrap:wrap;gap:4px;max-width:1640px;justify-content:center}
+.nb button{padding:3px 8px;background:#1a1d24;color:#8a90a0;border:1px solid #2a2f38;border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit;transition:all .15s}
+.nb button:hover{background:#2a2f38;color:#cfd6e2}
+.nb button.on{background:#ec9709;color:#000;border-color:#ec9709;font-weight:600}
+
+/* COMMON */
+.bk{position:absolute;left:2px;top:50%;transform:translateY(-50%);color:#5d6575;font-size:20px;cursor:pointer;z-index:5;padding:8px}
+.bk:hover{color:#cfd6e2}
+.dv{width:1px;background:#2a2f38;flex-shrink:0;align-self:stretch}
+.lp{width:470px;padding:18px 20px 18px 28px;display:flex;flex-direction:column;justify-content:center;flex-shrink:0;position:relative}
+.rp{flex:1;overflow-y:auto;padding:14px 20px;position:relative}
+.rp::-webkit-scrollbar{width:2px}
+.rp::-webkit-scrollbar-thumb{background:#3a3f4a;border-radius:2px}
+.sn{width:65px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;padding:6px 0;gap:1px;border-left:1px solid #2a2f38}
+.tb{width:68px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;padding:2px 0;gap:2px}
+
+/* TYPOGRAPHY */
+.hw{font-size:60px;color:#ec9709;font-weight:bold;line-height:1.15}
+.hw2{font-size:48px;color:#ec9709;font-weight:bold;line-height:1.2}
+.hw3{font-size:36px;color:#ec9709;font-weight:bold;line-height:1.4}
+.py{font-size:30px;color:#fff;margin-top:2px}
+.py2{font-size:26px;color:#a1aabe}
+.dt{font-size:26px;color:#cfd6e2;line-height:1.55}
+.dt2{font-size:24px;color:#cfd6e2;line-height:1.5}
+.ds{font-size:22px;color:#cfd6e2;line-height:1.5}
+.src{font-size:20px;color:#959caa;margin-top:6px}
+.st{font-size:24px;color:#7b8396;padding:4px 0}
+.st.a{color:#08c8a5}
+.stb{font-size:30px;color:#cfd6e2;font-weight:bold;margin:6px 0 4px}
+.ml{font-size:24px;color:#7b8396;text-decoration:underline;cursor:pointer}
+.ex{color:rgba(207,214,226,.65)}
+.en{color:#32e9e1}
+.sep{height:1px;background:#1e2128;margin:8px 0}
+
+/* Sidebar nav items */
+.si{font-size:22px;color:#7b8396;padding:5px 2px;cursor:pointer;text-align:center;width:100%;line-height:1.3}
+.si.a{color:#08c8a5}
+.sd{width:1px;height:8px;background:#5d6575;margin:2px auto}
+
+/* Toolbar */
+.ti{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#cfd6e2;background:#1a1d24;border:1px solid #2a2f38}
+.ti.hl{background:rgba(65,188,255,.14);border-color:#10d7ff}
+.ti svg{width:20px;height:20px;fill:currentColor}
+
+/* HOME */
+.hdr{display:flex;align-items:center;gap:14px;padding:10px 24px 8px}
+.htab{font-size:28px;color:rgba(207,214,226,.7);cursor:pointer}
+.htab.a{color:#ec9709;font-weight:bold}
+.hgrid{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:0 24px;overflow-y:auto;flex:1}
+.hi{background:#2a2f38;border-radius:8px;padding:8px 14px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:26px;color:#cfd6e2}
+.hi:hover{background:#3a3f4a}
+
+/* Card */
+.cd{background:#16181c;border-radius:8px;padding:6px 12px;margin-bottom:6px;display:inline-block}
+.cdl{font-size:22px;color:#cfd6e2}
+.cds{font-size:18px;color:#4c4f55;margin-top:2px}
+
+/* Badges */
+.bg{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:6px;background:linear-gradient(143deg,#f39b00 34%,#e23700 91%);color:#fff;font-size:12px;font-weight:bold;margin-right:6px;vertical-align:middle}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#08c8a5;margin-right:4px;vertical-align:middle}
+
+/* Sentence */
+.sl{flex:1;padding:16px 24px;display:flex;flex-direction:column;justify-content:center;overflow-y:auto}
+.stx{font-size:32px;color:#ec9709;font-weight:bold;line-height:1.45}
+.stx2{font-size:32px;color:#cfd6e2;line-height:1.45}
+.snote{font-size:20px;color:#959caa;margin-top:6px}
+
+/* Btn group */
+.bgrp{display:flex;gap:8px;margin-top:6px;align-items:center}
+.bbtn{background:#23272e;border-radius:6px;padding:4px 10px;font-size:20px;color:#cfd6e2;cursor:pointer;display:flex;align-items:center;gap:4px}
+.bbtn .lbl{font-size:18px}
+
+/* Info row */
+.irow{display:flex;gap:16px;font-size:26px;color:#7b8396;margin:4px 0}
+.ival{color:#cfd6e2}
+
+/* Playback icon */
+.play{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+.play-icon{font-size:22px;color:#cfd6e2}
+.spk{font-size:24px;color:#cfd6e2;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="screen" id="scr"></div>
+<div class="nb" id="nav"></div>
+
+<script>
+const toolbar = `<div class="tb">
+  <div class="ti hl" title="收藏">☰</div>
+  <div class="ti" title="列表">☆</div>
+  <div class="ti" title="全屏/分屏">⊡</div>
+  <div class="ti" title="键盘">⌨</div>
+</div>`;
+
+const P = [
+// 0: 查词翻译首页
+{n:'查词翻译首页', h:`
+<div style="display:flex;flex-direction:column;width:100%;height:100%">
+  <div class="hdr">
+    <span style="font-size:22px;color:#5d6575;cursor:pointer" onclick="go(0)">‹</span>
+    <span class="htab">查词翻译</span>
+    <span class="htab a">历史记录</span>
+  </div>
+  <div class="hgrid">
+    <div class="hi" onclick="go(1)">山</div>
+    <div class="hi" onclick="go(2)">和</div>
+    <div class="hi" onclick="go(3)">美丽</div>
+    <div class="hi" onclick="go(4)">朝阳</div>
+    <div class="hi" onclick="go(5)">断了线的风筝——没了影儿</div>
+    <div class="hi" onclick="go(16)">一个和尚挑水吃，两个和尚扛水吃，三个和尚…</div>
+    <div class="hi" onclick="go(6)">静夜思</div>
+    <div class="hi" onclick="go(7)">床前明月光</div>
+    <div class="hi" onclick="go(8)">床前明月光，疑是地上霜。举头望明月，低头…</div>
+    <div class="hi" onclick="go(9)">静夜思[唐]李白床前明月光，疑是地上霜。举…</div>
+    <div class="hi" onclick="go(10)">present</div>
+    <div class="hi" onclick="go(11)">Pneumonoultramicroscopicsilicovolcanoc…</div>
+    <div class="hi" onclick="go(12)">presen</div>
+    <div class="hi" onclick="go(13)">Make a contribution to</div>
+    <div class="hi" onclick="go(14)">a</div>
+    <div class="hi" onclick="go(17)">hǎo</div>
+    <div class="hi" onclick="go(18)">zhuang</div>
+    <div class="hi" onclick="go(19)">měi lì</div>
+    <div class="hi" onclick="go(15)">This pen can help me learn English and…</div>
+    <div class="hi" onclick="go(20)">The Power of Small Changes。Many people…</div>
+    <div class="hi" onclick="go(21)">这支笔可以帮助我学习英文和中文。</div>
+    <div class="hi" style="visibility:hidden"></div>
+  </div>
+</div>`},
+
+// 1: 查汉字-山-分屏设计
+{n:'查汉字-山', h:`
+<div class="bk" onclick="go(0)">‹</div>
+<div class="lp" style="align-items:center">
+  <div style="width:130px;height:130px;background:#1a1d24;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:6px">
+    <span style="font-size:90px;color:#cfd6e2;font-weight:bold">山</span>
+  </div>
+  <div class="irow" style="font-size:22px"><span>结构：<span class="ival">独立体</span></span><span>部首：<span class="ival">山</span></span></div>
+  <div class="irow" style="font-size:22px"><span>笔画：<span class="ival">3</span></span></div>
+  <div style="display:flex;gap:8px;align-items:center;margin-top:4px">
+    <span class="py">shān</span>
+    <span class="spk">🔊</span>
+    <span style="font-size:24px;color:#cfd6e2">拼读</span>
+    <span class="spk">🔊</span>
+  </div>
+  <div class="bgrp"><div class="bbtn">🎙</div></div>
+</div>
+<div class="dv"></div>
+<div class="rp">
+  <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+    <span class="dot"></span><span class="st a">释义</span>
+  </div>
+  <div class="dt" style="margin-bottom:6px">1.名词。地面上由土、石形成的巨大而高耸的部分：村子四周都是~。~峰。~区。<br>2.名词。像山的东西: 冰~。~墙。<br>3.名词。指蚕簇: 蚕上~了。<br>4.名词。比喻巨大的声音:锣鼓敲得~响。<br>5.名词。姓。</div>
+  <div class="src">来源《现代汉语规范词典》</div>
+  <div class="ml" style="margin:4px 0">更多词典的释义</div>
+  <div class="sep"></div>
+  <div style="display:flex;align-items:center;gap:6px"><span class="dot"></span><span class="st">组词</span></div>
+  <div class="dt2" style="margin:4px 0">近义 — 来源:《学生现代汉语规范词典》</div>
+  <div class="sep"></div>
+  <div style="display:flex;align-items:center;gap:6px"><span class="bg">源</span><span class="stb" style="font-size:26px">字源</span><span class="spk" style="font-size:18px">🔊</span></div>
+  <div class="sep"></div>
+  <div style="display:flex;align-items:center;gap:6px"><span class="dot"></span><span class="st">字形</span></div>
+  <div class="sep"></div>
+  <div style="display:flex;align-items:center;gap:6px"><span class="dot"></span><span class="st">字义</span></div>
+  <div class="dt2">山，本意是地面上由土或者石头构成的巨大、高耸的部分。东晋有一个叫谢安的人……寿比南山……日落西山……</div>
+  <div class="sep"></div>
+  <div style="display:flex;align-items:center;gap:6px"><span class="dot"></span><span class="st">字族</span></div>
+  <div style="background:#fffaeb;border-radius:12px;padding:10px;margin:6px 0">
+    <div style="display:flex;gap:8px;align-items:center"><div style="background:#8fa506;border-radius:6px;padding:4px 8px;color:#607000;font-size:20px"><span style="color:#fff;font-size:40px">山</span><br>字族</div>
+    <div style="font-size:26px;color:#000;flex:1">山，可以作为声旁，组成新的汉字，这些汉字的读音一般和"山"相似或相关。</div></div>
+    <div style="display:flex;gap:10px;margin-top:6px"><span style="font-size:24px;color:#ec9709">表音</span><span style="font-size:24px;color:#cfd6e2">表意</span></div>
+  </div>
+  <div class="sep"></div>
+  <div style="display:flex;align-items:center;gap:6px"><span class="dot"></span><span class="st">文学拓展</span></div>
+  <div class="stb" style="font-size:26px">教材-对韵歌</div>
+  <div class="dt2">云对雨，雪对风，花对树，鸟对虫，山青对水秀，柳绿对桃红。</div>
+  <div class="stb" style="font-size:26px">高山流水</div>
+  <div class="dt2">伯牙是春秋战国时期著名的古琴演奏家……</div>
+  <div class="sep"></div>
+  <div style="display:flex;align-items:center;gap:6px"><span class="dot"></span><span class="st">文化拓展</span></div>
+  <div class="stb" style="font-size:26px">山与中国文化</div>
+  <div class="dt2">作为自然景观的山与水，在中华文化发展过程中不断被赋予丰富的文化内涵……</div>
+  <div class="sep"></div>
+  <div style="display:flex;align-items:center;gap:6px"><span class="bg">简</span><span style="font-size:24px;color:#cfd6e2">百科</span><span class="spk" style="font-size:18px">🔊</span></div>
+  <div class="dt2">陆地表面高度较大、坡度较陡的隆起地貌，海拔一般在500米以上……</div>
+  <div class="src">来源《大辞海·天文学地球科学卷》</div>
+  <div class="sep"></div>
+  <div style="display:flex;align-items:center;gap:6px"><span class="bg" style="font-size:10px">古</span><span style="font-size:24px;color:#cfd6e2">古代释义</span><span class="spk" style="font-size:18px">🔊</span></div>
+  <div class="dt2">1.地面上由土石构成的隆起高耸部分。<span class="ex">《荀子·劝学》：积土成山，风雨兴焉。</span><br>2.指形状像山的东西。<span class="ex">如鳌山，坟山。</span></div>
+  <div class="src">来源《学生古汉语词典》</div>
+  <div class="sep"></div>
+  <div style="display:flex;align-items:center;gap:6px"><span class="bg" style="font-size:10px">古</span><span style="font-size:24px;color:#cfd6e2">汉英释义</span><span class="spk" style="font-size:18px">🔊</span></div>
+  <div class="dt2">1 (地面形成的高耸的部分) <span class="en">hill; mountain</span>: <span class="ex">翻山越岭cross over mountain after mountain</span><br>2 (形状像山的东西) <span class="en">anything resembling a mountain</span><br>3 (蚕簇) <span class="en">bushes in which silkworms spin cocoons</span></div>
+  <div class="src">来源《世纪汉英大辞典》</div>
+  <div class="sep"></div>
+  <div style="display:flex;align-items:center;gap:6px;margin-top:8px"><span class="bg" style="font-size:10px">启</span><span style="font-size:24px;color:#cfd6e2">启蒙</span><span class="spk" style="font-size:18px">🔊</span></div>
+  <div style="height:200px;background:#e7ecd4;border-radius:20px;margin-top:8px;display:flex;align-items:center;justify-content:center">
+    <span style="font-size:60px;color:#c95f38;font-weight:900;font-style:italic">shān</span>
+    <div style="width:120px;height:120px;background:#fff;border-radius:16px;border:2px solid #ccb79f;display:flex;align-items:center;justify-content:center;margin-left:20px"><span style="font-size:80px;color:#c95f38">山</span></div>
+  </div>
+</div>
+<div class="sn">
+  <div class="si a">释义</div><div class="sd"></div>
+  <div class="si">组词</div><div class="sd"></div>
+  <div class="si">字源</div><div class="sd"></div>
+  <div class="si">字形</div><div class="sd"></div>
+  <div class="si">字义</div><div class="sd"></div>
+  <div class="si">字族</div><div class="sd"></div>
+  <div class="si">文学<br>拓展</div><div class="sd"></div>
+  <div class="si">文化<br>拓展</div>
+</div>
+${toolbar}`},
+
+// 2: 查汉字-和-多音字
+{n:'查汉字-和', h:`
+<div class="bk" onclick="go(0)">‹</div>
+<div class="lp" style="align-items:center">
+  <div style="width:130px;height:130px;background:#1a1d24;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:4px"><span style="font-size:90px;color:#cfd6e2;font-weight:bold">和</span></div>
+  <div class="irow" style="font-size:22px"><span>结构：<span class="ival">左右</span></span><span>部首：<span class="ival">口</span></span></div>
+  <div class="irow" style="font-size:22px"><span>笔画：<span class="ival">8</span></span></div>
+  <div style="display:flex;gap:6px;align-items:center;margin-top:2px;flex-wrap:wrap">
+    <span class="py" style="font-size:26px">hé</span><span class="spk">🔊</span>
+    <span class="py" style="font-size:26px;opacity:.5">hè</span><span class="spk" style="opacity:.5">🔊</span>
+    <span class="py" style="font-size:26px;opacity:.5">huó</span><span class="spk" style="opacity:.5">🔊</span>
+    <span class="py" style="font-size:26px;opacity:.5">huò</span><span class="spk" style="opacity:.5">🔊</span>
+    <span class="py" style="font-size:26px;opacity:.5">hú</span><span class="spk" style="opacity:.5">🔊</span>
+  </div>
+  <div style="font-size:22px;color:#cfd6e2;margin-top:2px">拼读 🔊</div>
+  <div class="bgrp"><div class="bbtn">🎙</div></div>
+</div>
+<div class="dv"></div>
+<div class="rp">
+  <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><span class="dot"></span><span class="st a">释义</span></div>
+  <div class="dt2"><b>[hé]</b><br>1.平和；和缓。2.和谐；和睦。3.结束战争或争执。4.（下棋或赛球）不分胜负。5.连带。6.介词。表示相关、比较等。7.连词。表示联合。8.日本。</div>
+  <div style="margin:4px 0"></div>
+  <div class="dt2"><b>[hè]</b> 1.和谐地跟着唱。2.依照别人诗词的题材和体裁做诗词。</div>
+  <div class="dt2"><b>[huó]</b> 在粉状物中加液体搅拌或揉弄使有粘性。</div>
+  <div class="dt2"><b>[huò]</b> 1.混合；搀合。2.量词。用于洗东西换水或一剂药煎的次数。</div>
+  <div class="dt2"><b>[hú]</b> 打麻将或斗纸牌时某一家的牌合乎规定的要求，取得胜利。</div>
+  <div class="src">来源《现代汉语规范词典》</div>
+  <div class="ml" style="margin:4px 0">更多词典的释义</div>
+  <div class="sep"></div>
+  <div style="display:flex;align-items:center;gap:6px"><span class="dot"></span><span class="st">字源</span></div>
+  <div class="sep"></div>
+  <div style="display:flex;align-items:center;gap:6px"><span class="dot"></span><span class="st">字义</span></div>
+  <div class="sep"></div>
+  <div style="display:flex;align-items:center;gap:6px"><span class="dot"></span><span class="st">字族</span></div>
+  <div class="sep"></div>
+  <div style="display:flex;align-items:center;gap:6px"><span class="dot"></span><span class="st">文学拓展</span></div>
+  <div class="sep"></div>
+  <div style="display:flex;align-items:center;gap:6px"><span class="dot"></span><span class="st">文化拓展</span></div>
+</div>
+<div class="sn">
+  <div class="si a">释义</div><div class="sd"></div>
+  <div class="si">组词</div><div class="sd"></div>
+  <div class="si">字源</div><div class="sd"></div>
+  <div class="si">字形</div><div class="sd"></div>
+  <div class="si">字义</div><div class="sd"></div>
+  <div class="si">字族</div><div class="sd"></div>
+  <div class="si">文学<br>拓展</div><div class="sd"></div>
+  <div class="si">文化<br>拓展</div>
+</div>
+${toolbar}`},
+
+// 3: 查词语-单音词-美丽
+{n:'查词语-美丽', h:`
+<div class="bk" onclick="go(0)">‹</div>
+<div class="lp">
+  <div class="hw">美丽</div>
+  <div style="display:flex;gap:8px;align-items:center;margin-top:4px">
+    <span class="py" style="font-size:28px">měi lì</span>
+    <span class="spk">🔊</span>
+  </div>
+  <div class="bgrp"><div class="bbtn">🎙</div></div>
+</div>
+<div class="dv"></div>
+<div class="rp">
+  <div class="dt">好看，看了感到愉悦的：<span class="ex">~动人｜～的桂林山水。</span></div>
+  <div class="ml" style="margin:4px 0">更多词典的释义</div>
+  <div class="src">来源《学生现代汉语规范词典》</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0">
+    <div class="cd"><span style="color:#08c8a5;font-size:20px">● </span><span class="cdl">搭配</span><div class="cds">来源:《小学生多功能组词造…》</div></div>
+    <div class="cd"><span style="color:#08c8a5;font-size:20px">● </span><span class="cdl">例句</span><div class="cds">来源:《小学生多功能组词造…》</div></div>
+    <div class="cd"><span style="color:#08c8a5;font-size:20px">● </span><span class="cdl">同义</span><div class="cds">来源:《同义词近义词反义词词典》</div></div>
+    <div class="cd"><span style="color:#08c8a5;font-size:20px">● </span><span class="cdl">近义</span><div class="cds">来源:《同义词近义词反义词词典》</div></div>
+    <div class="cd"><span style="color:#08c8a5;font-size:20px">● </span><span class="cdl">翻译</span><div class="cds">来源:《同义词近义词反义词词典》</div></div>
+    <div class="cd"><span style="color:#08c8a5;font-size:20px">● </span><span class="cdl">辨析</span><div class="cds">来源:《同义词近义词反义词词典》</div></div>
+    <div class="cd"><span style="color:#08c8a5;font-size:20px">● </span><span class="cdl">备注</span><div class="cds">来源:《同义词近义词反义词词典》</div></div>
+  </div>
+  <div class="sep"></div>
+  <div style="display:flex;align-items:center;gap:6px"><span class="bg" style="font-size:10px">古</span><span style="font-size:24px;color:#cfd6e2">古代释义</span><span class="spk" style="font-size:18px">🔊</span></div>
+  <div class="dt2">好看。《国策·齐策》："城北徐公，齐国之美丽者也。"</div>
+  <div class="src">来源《大辞海·语词卷》</div>
+  <div class="sep"></div>
+  <div style="display:flex;align-items:center;gap:6px"><span class="bg" style="font-size:10px">古</span><span style="font-size:24px;color:#cfd6e2">汉英释义</span><span class="spk" style="font-size:18px">🔊</span></div>
+  <div class="dt2"><span class="en">beautiful; beauty; pretty; fair</span>:<br>~的花朵 <span class="ex">beautiful flowers;</span><br>~富饶的国家 <span class="ex">a beautiful and richly-endowed country;</span><br>一个~的女人是一颗钻石 <span class="ex">{萨迪}A beautiful woman is diamond;</span></div>
+  <div class="src">来源《世纪汉英大辞典》</div>
+</div>
+<div class="sn">
+  <div class="si a">释义</div><div class="sd"></div>
+  <div class="si">反义</div><div class="sd"></div>
+  <div class="si">备注</div>
+</div>
+${toolbar}`},
+
+// 4: 查词语-多音词-朝阳
+{n:'查词语-朝阳', h:`
+<div class="bk" onclick="go(0)">‹</div>
+<div class="lp">
+  <div class="hw">朝阳</div>
+  <div style="display:flex;gap:8px;align-items:center;margin-top:4px">
+    <span class="py" style="font-size:28px">zhāo yáng / cháo yáng</span>
+    <span class="spk">🔊</span>
+  </div>
+  <div style="display:flex;gap:6px;margin-top:4px"><span class="spk">🔊</span><span style="font-size:22px;color:#7b8396">切换读音</span></div>
+  <div class="bgrp"><div class="bbtn">🎙</div></div>
+</div>
+<div class="dv"></div>
+<div class="rp">
+  <div class="dt"><b>[zhāo yáng]</b> 初升的太阳：~东升。</div>
+  <div style="margin:6px 0"></div>
+  <div class="dt"><b>[cháo yáng]</b> 向着太阳，指房屋朝南：这间房子~。</div>
+  <div class="src">来源《学生现代汉语规范词典》</div>
+  <div class="ml" style="margin:4px 0">更多词典的释义</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0">
+    <div class="cd"><span style="color:#08c8a5;font-size:20px">● </span><span class="cdl">例句</span></div>
+    <div class="cd"><span style="color:#08c8a5;font-size:20px">● </span><span class="cdl">近义</span></div>
+  </div>
+  <div class="sep"></div>
+  <div style="display:flex;align-items:center;gap:6px"><span class="bg" style="font-size:10px">古</span><span style="font-size:24px;color:#cfd6e2">古代释义</span><span class="spk" style="font-size:18px">🔊</span></div>
+  <div class="dt2">1.朝向太阳。2.早晨的太阳。</div>
+  <div class="sep"></div>
+  <div style="display:flex;align-items:center;gap:6px"><span class="bg" style="font-size:10px">古</span><span style="font-size:24px;color:#cfd6e2">汉英释义</span><span class="spk" style="font-size:18px">🔊</span></div>
+  <div class="dt2"><span class="en">the morning sun; the rising sun</span></div>
+</div>
+<div class="sn"><div class="si a">释义</div><div class="sd"></div><div class="si">例句</div></div>
+${toolbar}`},
+
+// 5: 查词语-歇后语-断了线的风筝
+{n:'歇后语-断了线的风筝', h:`
+<div class="bk" onclick="go(0)">‹</div>
+<div class="lp">
+  <div class="hw" style="font-size:52px;line-height:1.25">断了线的风筝<br>——没了影儿</div>
+  <div class="bgrp" style="margin-top:6px"><div class="bbtn">🎙</div><div class="bbtn">🔊</div></div>
+</div>
+<div class="dv"></div>
+<div class="rp">
+  <div class="dt">(歇)比喻没有了踪影。</div>
+  <div class="dt2" style="margin-top:4px"><span class="ex">[例]正在安静下来想听他的下文时，他的话却又像断了线的风筝，一去就没了影儿。(秦兆阳《在田野上，前进!》一七章)</span></div>
+  <div class="src">来源《语海》</div>
+  <div class="sep"></div>
+  <div style="display:flex;align-items:center;gap:6px"><span class="bg" style="font-size:10px">译</span><span style="font-size:24px;color:#cfd6e2">汉英翻译</span><span class="spk" style="font-size:18px">🔊</span></div>
+  <div style="display:flex;align-items:center;gap:4px;margin:4px 0"><span class="dot"></span><span class="st">释义</span></div>
+  <div class="dt">A kite with a broken string-no trace.</div>
+  <div class="snote">以上句子由机器智能翻译</div>
+</div>
+<div class="sn"><div class="si a">释义</div><div class="sd"></div><div class="si">详情</div></div>
+${toolbar}`},
+
+// 6: 查古诗文-标题-静夜思
+{n:'古诗文-静夜思', h:`
+<div class="bk" onclick="go(0)">‹</div>
+<div class="lp">
+  <div class="hw" style="font-size:56px">静夜思</div>
+  <div style="font-size:26px;color:#cfd6e2;margin-top:4px">[唐] 李白</div>
+  <div class="bgrp" style="margin-top:6px"><div class="bbtn">🎙</div><div class="bbtn">🔊 全文朗读</div></div>
+</div>
+<div class="dv"></div>
+<div class="rp">
+  <div class="dt" style="font-size:30px;line-height:1.8;margin-bottom:8px">床前明月光，疑是地上霜。<br>举头望明月，低头思故乡。</div>
+  <div class="sep"></div>
+  <div style="display:flex;align-items:center;gap:6px"><span class="dot"></span><span class="st a">注释</span></div>
+  <div class="dt2">静夜思：安静的夜晚引起的思绪。<br>疑：好像，仿佛。<br>举头：抬头。</div>
+  <div class="sep"></div>
+  <div style="display:flex;align-items:center;gap:6px"><span class="dot"></span><span class="st">译文</span></div>
+  <div class="dt2">明亮的月光洒在窗户纸上，好像地上泛起了一层白霜。我抬起头来，看那天窗外空中的一轮明月，不由得低头沉思，想起远方的家乡。</div>
+  <div class="sep"></div>
+  <div style="display:flex;align-items:center;gap:6px"><span class="dot"></span><span class="st">赏析</span></div>
+  <div class="dt2">这首诗写的是在寂静的月夜思念家乡的感受……诗的前两句写诗人在作客他乡的特定环境中一刹那间所产生的错觉……</div>
+  <div class="sep"></div>
+  <div style="display:flex;align-items:center;gap:6px"><span class="bg" style="font-size:10px">译</span><span style="font-size:24px;color:#cfd6e2">英文翻译</span><span class="spk" style="font-size:18px">🔊</span></div>
+  <div class="dt2">Thoughts on a Tranquil Night<br><span class="ex">Before my bed a pool of light — Is it hoarfrost on the ground?<br>Looking up, I find the moon bright; Bowing, in homesickness I'm drowned.</span></div>
+</div>
+<div class="sn"><div class="si a">注释</div><div class="sd"></div><div class="si">译文</div><div class="sd"></div><div class="si">赏析</div></div>
+${toolbar}`},
+
+// 7: 查古诗文-诗句-单句-床前明月光
+{n:'古诗文-诗句-单句', h:`
+<div class="bk" onclick="go(0)">‹</div>
+<div class="lp">
+  <div class="hw" style="font-size:50px">床前明月光</div>
+  <div style="font-size:24px;color:#7b8396;margin-top:4px">出自 [唐] 李白《静夜思》</div>
+  <div class="bgrp" style="margin-top:6px"><div class="bbtn">🎙</div><div class="bbtn">🔊</div></div>
+</div>
+<div class="dv"></div>
+<div class="rp">
+  <div class="dt" style="font-size:30px;line-height:1.8">床前明月光，疑是地上霜。<br>举头望明月，低头思故乡。</div>
+  <div class="sep"></div>
+  <div style="display:flex;align-items:center;gap:6px"><span class="dot"></span><span class="st a">注释</span></div>
+  <div class="dt2">床：此处指井栏/窗户前。<br>明月光：明亮的月光。</div>
+  <div class="sep"></div>
+  <div style="display:flex;align-items:center;gap:6px"><span class="dot"></span><span class="st">译文</span></div>
+  <div class="dt2">明亮的月光洒在窗户纸上，好像地上泛起了一层白霜。</div>
+  <div class="sep"></div>
+  <div style="display:flex;align-items:center;gap:6px"><span class="bg" style="font-size:10px">译</span><span style="font-size:24px;color:#cfd6e2">英文翻译</span></div>
+  <div class="dt2"><span class="ex">Before my bed a pool of light — Is it hoarfrost on the ground?</span></div>
+</div>
+<div class="sn"><div class="si a">注释</div><div class="sd"></div><div class="si">译文</div></div>
+${toolbar}`},
+
+// 8: 查古诗文-诗句-多句
+{n:'古诗文-诗句-多句', h:`
+<div class="bk" onclick="go(0)">‹</div>
+<div class="lp">
+  <div class="hw3">床前明月光，疑是地上霜。举头望明月，低头思故乡。</div>
+  <div style="font-size:22px;color:#7b8396;margin-top:4px">出自 [唐] 李白《静夜思》</div>
+  <div class="bgrp" style="margin-top:4px"><div class="bbtn">🎙</div><div class="bbtn">🔊</div></div>
+</div>
+<div class="dv"></div>
+<div class="rp">
+  <div style="display:flex;align-items:center;gap:6px"><span class="dot"></span><span class="st a">注释</span></div>
+  <div class="dt2">静夜思：安静的夜晚引起的思绪。疑：好像。举头：抬头。</div>
+  <div class="sep"></div>
+  <div style="display:flex;align-items:center;gap:6px"><span class="dot"></span><span class="st">译文</span></div>
+  <div class="dt2">明亮的月光洒在窗户纸上，好像地上泛起了一层白霜。我抬起头来，看那天窗外空中的一轮明月，不由得低头沉思，想起远方的家乡。</div>
+  <div class="sep"></div>
+  <div style="display:flex;align-items:center;gap:6px"><span class="dot"></span><span class="st">赏析</span></div>
+  <div class="dt2">这首诗写的是在寂静的月夜思念家乡的感受。语言朴素，韵味含蓄无穷……</div>
+</div>
+<div class="sn"><div class="si a">注释</div><div class="sd"></div><div class="si">译文</div><div class="sd"></div><div class="si">赏析</div></div>
+${toolbar}`},
+
+// 9: 查古诗文-诗句-多句-智能查询
+{n:'古诗文-智能查询', h:`
+<div class="bk" onclick="go(0)">‹</div>
+<div class="lp">
+  <div class="hw3" style="font-size:30px">静夜思[唐]李白<br>床前明月光，疑是地上霜。举头望明月，低头思故乡。</div>
+  <div class="bgrp" style="margin-top:6px"><div class="bbtn">🎙</div><div class="bbtn">🔊</div></div>
+</div>
+<div class="dv"></div>
+<div class="rp">
+  <div style="font-size:24px;color:#08c8a5;margin-bottom:8px">为您匹配到以下结果：</div>
+  <div style="background:#16181c;border-radius:10px;padding:12px;margin-bottom:8px;cursor:pointer" onclick="go(6)">
+    <div style="font-size:26px;color:#cfd6e2;font-weight:bold">静夜思</div>
+    <div style="font-size:22px;color:#7b8396;margin-top:2px">[唐] 李白 · 五言绝句</div>
+    <div style="font-size:22px;color:#959caa;margin-top:2px">床前明月光，疑是地上霜。举头望明月，低头思故乡。</div>
+  </div>
+  <div style="background:#16181c;border-radius:10px;padding:12px;cursor:pointer">
+    <div style="font-size:26px;color:#cfd6e2;font-weight:bold">月夜忆舍弟</div>
+    <div style="font-size:22px;color:#7b8396;margin-top:2px">[唐] 杜甫</div>
+    <div style="font-size:22px;color:#959caa;margin-top:2px">露从今夜白，月是故乡明……</div>
+  </div>
+</div>
+${toolbar}`},
+
+// 10: 查单词-多词性-present
+{n:'查单词-present', h:`
+<div class="bk" onclick="go(0)">‹</div>
+<div class="lp">
+  <div class="hw" style="font-size:52px">present</div>
+  <div style="display:flex;gap:6px;align-items:center;margin-top:4px">
+    <div class="bbtn"><span style="font-size:18px">英</span> ⇌ <span style="font-size:18px;color:#8d94a4">美</span></div>
+    <span class="spk">🔊</span>
+  </div>
+  <div class="py2" style="margin-top:2px">/ˈpreznt/</div>
+  <div style="font-size:28px;color:#cfd6e2;margin-top:4px">礼物</div>
+  <div style="display:flex;gap:6px;margin-top:4px">
+    <span class="spk" style="font-size:18px">🔊</span>
+    <span style="font-size:20px;color:#7b8396">例句 🔊</span>
+  </div>
+</div>
+<div class="dv"></div>
+<div class="rp">
+  <div class="dt2" style="margin-bottom:6px">a.出席的，在座的，在场的；存在的；现在的，目前的<br>n.现在，目前；礼物；赠品<br>vt.赠送；授予；呈现；表示<br>vi.指向；面向；显露</div>
+  <div class="src">来源《英汉简明词典》</div>
+  <div class="sep"></div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0">
+    <div class="cd"><span style="color:#08c8a5;font-size:18px">● </span><span class="cdl" style="font-size:20px">词态变化</span></div>
+    <div class="cd"><span style="color:#08c8a5;font-size:18px">● </span><span class="cdl" style="font-size:20px">短语</span></div>
+    <div class="cd"><span style="color:#08c8a5;font-size:18px">● </span><span class="cdl" style="font-size:20px">派生词</span></div>
+    <div class="cd"><span style="color:#08c8a5;font-size:18px">● </span><span class="cdl" style="font-size:20px">近义</span></div>
+    <div class="cd"><span style="color:#08c8a5;font-size:18px">● </span><span class="cdl" style="font-size:20px">谚语</span></div>
+  </div>
+  <div class="sep"></div>
+  <div style="display:flex;align-items:center;gap:6px"><span class="bg" style="font-size:10px">简</span><span style="font-size:24px;color:#cfd6e2">简明</span><span class="spk" style="font-size:18px">🔊</span></div>
+  <div class="dt2"><b>词态变化：</b>复数:presents 现在分词:presenting 过去分词:presented</div>
+  <div class="dt2"><b>短语：</b>present oneself 出席 / at present 目前 / present situation 现状 / birthday present 生日礼物</div>
+  <div class="sep"></div>
+  <div style="display:flex;align-items:center;gap:6px"><span class="bg" style="font-size:10px">考</span><span style="font-size:24px;color:#cfd6e2">考试</span><span class="spk" style="font-size:18px">🔊</span></div>
+  <div style="display:flex;gap:6px;margin:4px 0">
+    <span style="background:#23272e;border-radius:4px;padding:2px 8px;font-size:20px;color:#cfd6e2">v.</span>
+    <span style="background:#23272e;border-radius:4px;padding:2px 8px;font-size:20px;color:#cfd6e2">n.</span>
+    <span style="background:#23272e;border-radius:4px;padding:2px 8px;font-size:20px;color:#cfd6e2">n.</span>
+  </div>
+  <div class="dt2">目前的，现在的；现在时态的；出席的；在场的</div>
+  <div class="dt2" style="margin-top:4px"><span class="ex">On Thursday night, the winning essays would be read in the hall with all the parents and students present. ——2021.随州市卷</span></div>
+  <div class="sep"></div>
+  <div style="display:flex;align-items:center;gap:6px"><span class="bg" style="font-size:10px">高</span><span style="font-size:24px;color:#cfd6e2">高阶</span><span class="spk" style="font-size:18px">🔊</span></div>
+  <div class="dt2"><b>pre·sent</b> BrE /ˈpreznt/ NAmE /ˈpreznt/</div>
+  <div class="dt2">1.【only before noun】existing or happening now现存的;当前的<br>· I am not satisfied with the present situation. 我对现状不满意。</div>
+  <div class="dt2">2.【not before noun】(of a person人) being in a particular place 在场;出席<br>· I wasn't present when the doctor examined him.</div>
+  <div class="src">来源《牛津高阶英汉双解词典（第10版）》</div>
+  <div class="sep"></div>
+  <div style="display:flex;align-items:center;gap:6px"><span class="bg" style="font-size:10px">启</span><span style="font-size:24px;color:#cfd6e2">启蒙</span><span class="spk" style="font-size:18px">🔊</span></div>
+</div>
+<div class="sn">
+  <div class="si a">释义</div><div class="sd"></div>
+  <div class="si">例句</div><div class="sd"></div>
+  <div class="si">词态<br>变化</div><div class="sd"></div>
+  <div class="si">短语</div><div class="sd"></div>
+  <div class="si">派生</div><div class="sd"></div>
+  <div class="si">近义</div><div class="sd"></div>
+  <div class="si">谚语</div>
+</div>
+${toolbar}`},
+
+// 11: 查单词-超长单词
+{n:'超长单词', h:`
+<div class="bk" onclick="go(0)">‹</div>
+<div class="lp">
+  <div style="font-size:22px;color:#ec9709;font-weight:bold;word-break:break-all;line-height:1.3">Pneumonoultramicroscopicsilicovolcanoconiosis</div>
+  <div class="py2" style="font-size:18px;margin-top:4px;word-break:break-all">/ˌnjuːmənəʊˌʌltrəmaɪkrəˌskɒpɪkˌsɪlɪkəʊvɒlˌkeɪnəʊkəʊnɪˈəʊsɪs/</div>
+  <div style="display:flex;gap:6px;align-items:center;margin-top:4px">
+    <div class="bbtn"><span style="font-size:16px">英</span> ⇌ <span style="font-size:16px;color:#8d94a4">美</span></div>
+    <span class="spk">🔊</span>
+  </div>
+</div>
+<div class="dv"></div>
+<div class="rp">
+  <div class="dt">n. 矽肺病（这个词是英语中最长的单词之一，指一种因吸入极细的硅酸盐或石英粉尘而引起的肺病）</div>
+  <div class="src">来源《英汉简明词典》</div>
+</div>
+${toolbar}`},
+
+// 12: 查单词-智能查询
+{n:'智能查询-presen', h:`
+<div class="bk" onclick="go(0)">‹</div>
+<div class="lp">
+  <div class="hw2">presen</div>
+  <div style="font-size:24px;color:#7b8396;margin-top:6px">您可能要查找：</div>
+</div>
+<div class="dv"></div>
+<div class="rp">
+  <div style="font-size:24px;color:#08c8a5;margin-bottom:8px">为您匹配到以下结果：</div>
+  <div style="background:#16181c;border-radius:10px;padding:12px;margin-bottom:6px;cursor:pointer" onclick="go(10)">
+    <div style="font-size:26px;color:#cfd6e2;font-weight:bold">present</div>
+    <div style="font-size:20px;color:#959caa">n. 礼物；现在 adj. 出席的；目前的</div>
+  </div>
+  <div style="background:#16181c;border-radius:10px;padding:12px;margin-bottom:6px;cursor:pointer">
+    <div style="font-size:26px;color:#cfd6e2;font-weight:bold">presence</div>
+    <div style="font-size:20px;color:#959caa">n. 出席；存在；仪态</div>
+  </div>
+  <div style="background:#16181c;border-radius:10px;padding:12px;margin-bottom:6px;cursor:pointer">
+    <div style="font-size:26px;color:#cfd6e2;font-weight:bold">presentation</div>
+    <div style="font-size:20px;color:#959caa">n. 报告；演示；表现</div>
+  </div>
+  <div style="background:#16181c;border-radius:10px;padding:12px;cursor:pointer">
+    <div style="font-size:26px;color:#cfd6e2;font-weight:bold">preserve</div>
+    <div style="font-size:20px;color:#959caa">vt. 保护；保存 n. 蜜饯</div>
+  </div>
+</div>
+${toolbar}`},
+
+// 13: 查短语-Make a contribution to
+{n:'查短语', h:`
+<div class="bk" onclick="go(0)">‹</div>
+<div class="lp">
+  <div class="hw3" style="font-size:46px;line-height:1.2">Make a contribution to</div>
+  <div style="display:flex;gap:6px;align-items:center;margin-top:6px">
+    <div class="bbtn"><span style="font-size:18px">英</span> ⇌ <span style="font-size:18px;color:#8d94a4">美</span></div>
+    <span class="spk">🔊</span>
+    <span class="spk">🔊</span>
+  </div>
+  <div class="py2" style="margin-top:2px;font-size:20px">/ meɪk ə ˌkɒntrɪˈbjuːʃn tuː /</div>
+</div>
+<div class="dv"></div>
+<div class="rp">
+  <div class="dt">为……做贡献</div>
+  <div class="sep"></div>
+  <div style="display:flex;align-items:center;gap:4px;margin:4px 0"><span class="dot"></span><span class="st">例句</span></div>
+  <div class="dt">Some advertisements nowadays aim to make a contribution to society and welfare.</div>
+  <div class="dt2 ex">如今，一些广告旨在为社会和福利做出贡献。</div>
+  <div class="src">来源《英汉简明词典》</div>
+</div>
+<div class="sn"><div class="si a">释义</div><div class="sd"></div><div class="si">例句</div></div>
+${toolbar}`},
+
+// 14: 查拼音-带声调
+{n:'查拼音-带声调', h:`
+<div class="bk" onclick="go(0)">‹</div>
+<div style="flex:1;display:flex;align-items:center;justify-content:center;padding:20px">
+  <div style="text-align:center">
+    <div style="font-size:80px;color:#ec9709;font-weight:bold">a</div>
+    <div style="font-size:40px;color:#cfd6e2;margin-top:8px">ā á ǎ à</div>
+    <div style="font-size:28px;color:#7b8396;margin-top:8px">韵母 · 发音示范</div>
+    <div style="display:flex;gap:12px;justify-content:center;margin-top:10px">
+      <span class="spk" style="font-size:24px">🔊 一声</span>
+      <span class="spk" style="font-size:24px">🔊 二声</span>
+      <span class="spk" style="font-size:24px">🔊 三声</span>
+      <span class="spk" style="font-size:24px">🔊 四声</span>
+    </div>
+  </div>
+</div>
+${toolbar}`},
+
+// 15: 查英语句子-短句
+{n:'英语句子-短句', h:`
+<div class="bk" onclick="go(0)">‹</div>
+<div class="sl">
+  <div class="stx" style="text-indent:2em">This pen can help me learn English and Chinese.</div>
+  <div class="bgrp" style="margin-top:8px">
+    <div class="bbtn">语法</div>
+    <div class="bbtn">🎙</div>
+  </div>
+</div>
+<div class="dv"></div>
+<div class="sl">
+  <div class="stx2" style="text-indent:2em">这支笔可以帮助我学习英文和中文。</div>
+  <div class="snote">以上句子由机器智能翻译</div>
+</div>
+${toolbar}`},
+
+// 16: 查词语-歇后语-一个和尚
+{n:'歇后语-一个和尚', h:`
+<div class="bk" onclick="go(0)">‹</div>
+<div class="lp" style="width:440px">
+  <div style="font-size:18px;color:#ec9709;position:absolute;top:4px;left:28px">TOP</div>
+  <div class="hw" style="font-size:36px;line-height:1.3">一个和尚挑水吃，两个和尚扛水吃，三个和尚没水吃</div>
+  <div class="bgrp" style="margin-top:4px"><div class="bbtn">🎙</div><div class="bbtn">🔊</div></div>
+</div>
+<div class="dv"></div>
+<div class="rp">
+  <div class="dt">(谚语)比喻人多了如果没有组织，大家互相推诿，反而做不成事。</div>
+  <div class="src">来源《语海》</div>
+  <div class="sep"></div>
+  <div style="display:flex;align-items:center;gap:6px"><span class="bg" style="font-size:10px">译</span><span style="font-size:24px;color:#cfd6e2">汉英翻译</span><span class="spk" style="font-size:18px">🔊</span></div>
+  <div class="dt2">One monk carries water to drink, two monks share the carrying, and three monks have no water to drink.</div>
+  <div class="snote">以上句子由机器智能翻译</div>
+</div>
+${toolbar}`},
+
+// 17: 查拼音+翻译-不带声调 hǎo
+{n:'拼音-hǎo', h:`
+<div class="bk" onclick="go(0)">‹</div>
+<div style="flex:1;display:flex;align-items:center;padding:20px 30px">
+  <div>
+    <div style="font-size:70px;color:#ec9709;font-weight:bold">hǎo</div>
+    <div style="font-size:28px;color:#cfd6e2;margin-top:6px">好 / 郝</div>
+    <div style="font-size:22px;color:#7b8396;margin-top:4px">可能匹配多个汉字</div>
+  </div>
+</div>
+<div class="dv"></div>
+<div class="rp">
+  <div class="dt" style="margin-bottom:6px"><b>好 [hǎo]</b></div>
+  <div class="dt2">1.优点多的；使人满意的。2.用在动词前，表示容易。3.友爱；和睦。4.身体健康；疾病消失。</div>
+  <div class="src">来源《现代汉语规范词典》</div>
+  <div class="sep"></div>
+  <div class="dt" style="margin-bottom:4px"><b>好 [hào]</b></div>
+  <div class="dt2">喜爱。好奇。好学。</div>
+</div>
+${toolbar}`},
+
+// 18: 查拼音+单词 zhuang
+{n:'拼音-zhuang', h:`
+<div class="bk" onclick="go(0)">‹</div>
+<div style="flex:1;display:flex;align-items:center;padding:20px 30px">
+  <div>
+    <div style="font-size:70px;color:#ec9709;font-weight:bold">zhuāng</div>
+    <div style="font-size:28px;color:#cfd6e2;margin-top:6px">装 / 庄 / 桩 / 妆</div>
+  </div>
+</div>
+<div class="dv"></div>
+<div class="rp">
+  <div class="dt" style="margin-bottom:6px"><b>装 [zhuāng]</b></div>
+  <div class="dt2">1.穿着的衣物。2.行装。3.修饰；打扮。4.假作；故意做作。5.把东西放进器物内。6.安置；设置。</div>
+  <div class="src">来源《现代汉语规范词典》</div>
+  <div class="sep"></div>
+  <div class="dt"><b>庄 [zhuāng]</b> 村庄；庄稼；庄严</div>
+</div>
+${toolbar}`},
+
+// 19: 查拼音+翻译-不带声调 měi lì
+{n:'拼音-měi lì', h:`
+<div class="bk" onclick="go(0)">‹</div>
+<div style="flex:1;display:flex;align-items:center;padding:20px 30px">
+  <div>
+    <div style="font-size:60px;color:#ec9709;font-weight:bold">měi lì</div>
+    <div style="font-size:30px;color:#cfd6e2;margin-top:6px">美丽</div>
+    <div class="bgrp" style="margin-top:6px"><span class="spk">🔊</span></div>
+  </div>
+</div>
+<div class="dv"></div>
+<div class="rp">
+  <div class="dt">好看，看了感到愉悦的：~动人｜～的桂林山水。</div>
+  <div class="src">来源《学生现代汉语规范词典》</div>
+  <div class="sep"></div>
+  <div style="display:flex;align-items:center;gap:6px"><span class="bg" style="font-size:10px">古</span><span style="font-size:24px;color:#cfd6e2">古代释义</span></div>
+  <div class="dt2">好看。《国策·齐策》："城北徐公，齐国之美丽者也。"</div>
+  <div class="sep"></div>
+  <div style="display:flex;align-items:center;gap:6px"><span class="bg" style="font-size:10px">译</span><span style="font-size:24px;color:#cfd6e2">汉英释义</span></div>
+  <div class="dt2"><span class="en">beautiful; beauty; pretty; fair</span></div>
+</div>
+${toolbar}`},
+
+// 20: 查英语句子-长句-分屏
+{n:'英语句子-长句', h:`
+<div class="bk" onclick="go(0)">‹</div>
+<div class="sl" style="padding:12px 20px">
+  <div class="stx" style="font-size:26px;line-height:1.4;text-indent:2em">The Power of Small Changes。Many people believe that they need to do something extraordinary to change the world. However, the truth is that small actions can make a big difference. For example, reducing the use of plastic bags or turning off the lights when leaving a room may seem like small things, but they are essential for protecting our environment.</div>
+  <div style="font-size:24px;color:#ec9709;font-weight:bold;line-height:1.4;margin-top:4px">In our daily lives, we can also help others with simple acts of kindness. A warm smile or a helpful hand can brighten someone's day.</div>
+  <div class="bgrp" style="margin-top:6px"><div class="bbtn">语法</div><div class="bbtn">🎙</div></div>
+</div>
+<div class="dv"></div>
+<div class="sl" style="padding:12px 20px">
+  <div class="stx2" style="font-size:26px;line-height:1.4;text-indent:2em">微小改变的力量。许多人认为，他们需要做一些非凡的事情才能改变世界。然而，事实是微小的行动也能产生巨大的影响。例如，减少塑料袋的使用或离开房间时随手关灯，这些看似是小事，但对于保护我们的环境至关重要。</div>
+  <div style="font-size:26px;color:#cfd6e2;line-height:1.4;margin-top:4px">在日常生活中，我们也可以通过简单的善举来帮助他人。一个温暖的微笑或一次援手都能点亮他人的一天。</div>
+  <div class="snote">以上句子由机器智能翻译</div>
+</div>
+${toolbar}`},
+
+// 21: 查中文句子-短句
+{n:'中文句子-短句', h:`
+<div class="bk" onclick="go(0)">‹</div>
+<div class="sl">
+  <div class="stx" style="text-indent:2em">这支笔可以帮助我学习英文和中文。</div>
+  <div class="bgrp" style="margin-top:8px"><div class="bbtn">🎙</div></div>
+</div>
+<div class="dv"></div>
+<div class="sl">
+  <div class="stx2" style="text-indent:2em">This pen can help me learn English and Chinese.</div>
+  <div class="snote">以上句子由机器智能翻译</div>
+</div>
+${toolbar}`},
+
+// 22: 查英语句子-长句-不分屏
+{n:'英语长句-不分屏', h:`
+<div class="bk" onclick="go(0)">‹</div>
+<div style="flex:1;overflow-y:auto;padding:16px 24px">
+  <div style="font-size:28px;color:#ec9709;font-weight:bold;line-height:1.5">The Power of Small Changes。Many people believe that they need to do something extraordinary to change the world. However, the truth is that small actions can make a big difference. For example, reducing the use of plastic bags or turning off the lights when leaving a room may seem like small things, but they are essential for protecting our environment. In our daily lives, we can also help others with simple acts of kindness.</div>
+  <div style="height:8px"></div>
+  <div style="font-size:28px;color:#cfd6e2;line-height:1.5">微小改变的力量。许多人认为，他们需要做一些非凡的事情才能改变世界。然而，事实是微小的行动也能产生巨大的影响。例如，减少塑料袋的使用或离开房间时随手关灯，这些看似是小事，但对于保护我们的环境至关重要。在日常生活中，我们也可以通过简单的善举来帮助他人。</div>
+  <div class="snote">以上句子由机器智能翻译</div>
+</div>
+${toolbar}`},
+
+// 23: 查汉字-山-不分屏
+{n:'查汉字-山-不分屏', h:`
+<div class="bk" onclick="go(0)">‹</div>
+<div style="flex:1;overflow-y:auto;padding:16px 24px">
+  <div style="display:flex;gap:16px;align-items:flex-start">
+    <div style="width:100px;height:100px;background:#1a1d24;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><span style="font-size:70px;color:#cfd6e2;font-weight:bold">山</span></div>
+    <div style="flex:1">
+      <div style="display:flex;gap:12px;align-items:center">
+        <span class="py">shān</span><span class="spk">🔊</span>
+        <span style="font-size:22px;color:#7b8396">结构：独立体 · 部首：山 · 笔画：3</span>
+      </div>
+      <div class="dt2" style="margin-top:4px">1.名词。地面上由土、石形成的巨大而高耸的部分。2.像山的东西。3.指蚕簇。4.比喻巨大的声音。5.姓。</div>
+      <div class="src">来源《现代汉语规范词典》</div>
+    </div>
+  </div>
+</div>
+${toolbar}`},
+
+// 24: 查拼音+翻译-不带声调(另一个)
+{n:'拼音翻译-不带声调', h:`
+<div class="bk" onclick="go(0)">‹</div>
+<div style="flex:1;overflow-y:auto;padding:16px 24px">
+  <div style="display:flex;gap:16px;align-items:center;margin-bottom:12px">
+    <div style="font-size:60px;color:#ec9709;font-weight:bold">zhuāng</div>
+    <div style="font-size:30px;color:#cfd6e2">装</div>
+  </div>
+  <div class="dt2">1.穿着的衣物：军~｜西~。2.行装：整~待发。3.修饰；打扮：~点｜梳~。4.假作；故意做作：~病｜~聋作哑。5.把东西放进器物内。6.安置；设置。</div>
+  <div class="src">来源《现代汉语规范词典》</div>
+  <div class="sep"></div>
+  <div style="display:flex;align-items:center;gap:6px"><span class="bg" style="font-size:10px">译</span><span style="font-size:24px;color:#cfd6e2">翻译</span></div>
+  <div class="dt2"><span class="en">dress; clothing; to install; to pretend; to load</span></div>
+</div>
+${toolbar}`},
+
+// 25: 分屏交互规范说明
+{n:'分屏交互规范', h:`
+<div style="flex:1;overflow-y:auto;padding:20px 30px">
+  <div style="font-size:32px;color:#ec9709;font-weight:bold;margin-bottom:12px">分屏交互规范说明</div>
+  <div class="dt" style="margin-bottom:8px">1. 分屏模式下，左侧显示查询词/句，右侧显示详细释义内容</div>
+  <div class="dt" style="margin-bottom:8px">2. 右侧面板支持垂直滚动浏览完整内容</div>
+  <div class="dt" style="margin-bottom:8px">3. 右侧边栏提供内容导航锚点（释义、组词、字源等）</div>
+  <div class="dt" style="margin-bottom:8px">4. 最右侧工具栏提供收藏、列表、全屏/分屏切换、键盘等功能</div>
+  <div class="dt" style="margin-bottom:8px">5. 左侧边缘有手势返回区域，支持滑动返回</div>
+  <div class="dt" style="margin-bottom:8px">6. 分屏比例：左面板约470px，右面板约1100px，导航栏约65px，工具栏约68px</div>
+  <div class="dt" style="margin-bottom:8px">7. 句子翻译采用左右对照布局，原文与译文各占一半</div>
+  <div class="dt" style="margin-bottom:8px">8. 不分屏模式下内容充满全屏宽度</div>
+  <div class="dt">9. 屏幕分辨率：1640×348 (5.6寸长条屏)</div>
+</div>
+${toolbar}`}
+];
+
+const scr = document.getElementById('scr');
+const nav = document.getElementById('nav');
+
+P.forEach((p,i)=>{
+  const d = document.createElement('div');
+  d.className = 'pg' + (i===0?' on':'');
+  d.id = 'p'+i;
+  d.innerHTML = p.h;
+  scr.appendChild(d);
+
+  const b = document.createElement('button');
+  b.className = i===0?'on':'';
+  b.textContent = p.n;
+  b.onclick = ()=>go(i);
+  nav.appendChild(b);
+});
+
+function go(i){
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.nb button').forEach(b=>b.classList.remove('on'));
+  document.getElementById('p'+i).classList.add('on');
+  nav.children[i].classList.add('on');
+  // Reset scroll for right panels
+  const rp = document.querySelector('#p'+i+' .rp');
+  if(rp) rp.scrollTop = 0;
+  const sl = document.querySelectorAll('#p'+i+' .sl');
+  sl.forEach(s=>s.scrollTop=0);
+}
+</script>
+</body>
+</html>
